@@ -1,46 +1,66 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-#define SIZE 5
+int mutex = 1, full = 0, empty = 3, x = 0;
 
-int buffer[SIZE];
-int in = 0, out = 0, count = 0;
-
-void produce(int item) {
-    if(count == SIZE) {
-        printf("Buffer Full\n");
-        return;
-    }
-
-    buffer[in] = item;
-    in = (in + 1) % SIZE;
-    count++;
-
-    printf("Produced: %d\n", item);
-}
-
-void consume() {
-    if(count == 0) {
-        printf("Buffer Empty\n");
-        return;
-    }
-
-    int item = buffer[out];
-    out = (out + 1) % SIZE;
-    count--;
-
-    printf("Consumed: %d\n", item);
-}
+int wait(int s);
+int signal(int s);
+void producer();
+void consumer();
 
 int main() {
-    produce(1);
-    produce(2);
-    produce(3);
+    int n;
 
-    consume();
-    consume();
+    printf("\n1.Producer\n2.Consumer\n3.Exit");
 
-    produce(4);
-    consume();
+    while (1) {
+        printf("\nEnter your choice: ");
+        scanf("%d", &n);
 
+        switch (n) {
+            case 1:
+                if ((mutex == 1) && (empty != 0))
+                    producer();
+                else
+                    printf("Buffer is full!!");
+                break;
+
+            case 2:
+                if ((mutex == 1) && (full != 0))
+                    consumer();
+                else
+                    printf("Buffer is empty!!");
+                break;
+
+            case 3:
+                exit(0);
+        }
+    }
     return 0;
+}
+
+int wait(int s) {
+    return (--s);
+}
+
+int signal(int s) {
+    return (++s);
+}
+
+void producer() {
+    mutex = wait(mutex);
+    full = signal(full);
+    empty = wait(empty);
+    x++;
+    printf("\nProducer produces item %d", x);
+    mutex = signal(mutex);
+}
+
+void consumer() {
+    mutex = wait(mutex);
+    full = wait(full);
+    empty = signal(empty);
+    printf("\nConsumer consumes item %d", x);
+    x--;
+    mutex = signal(mutex);
 }
